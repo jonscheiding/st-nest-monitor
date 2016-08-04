@@ -25,21 +25,16 @@ def onTemperatureChange(evt) {
     log.info "Current temperature is ${thermostat.currentTemperature}."
     
     def warn = false
-    switch(thermostat.currentOperatingState) {
+    switch(thermostat.currentThermostatOperatingState) {
     	case "heating":
-        	warn = thermostat.currentTemperature < state.lastTemperature
-        	warn = true
+        	warn = (thermostat.currentTemperature < state.lastTemperature)
         	break
     	case "cooling":
-        	warn = thermostat.currentTemperature > state.lastTemperature
-            warn = true
+        	warn = (thermostat.currentTemperature > state.lastTemperature)
             break
     }
     
-    warn = true
-    
     if(warn) {
-    	def operatingStateSince = new Date(state.operatingStateSince)
     	def message = 
         	"Thermostat is ${thermostat.currentThermostatOperatingState}, " +
             "but the temperature has changed " + 
