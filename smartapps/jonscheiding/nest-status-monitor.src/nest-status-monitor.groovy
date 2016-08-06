@@ -21,7 +21,21 @@ preferences {
 	}
 }
 
+def getDisplayTime(seconds) {
+	def minutes = (seconds / 60).toInteger()
+    def hours = (minutes / 60).toInteger()
+    
+	if(seconds < 60) return "${seconds} seconds"
+    if(minutes == 1) return "1 minute"
+    if(minutes < 60) return "${minutes} minutes"
+    if(hours == 1) return "1 hour"
+    return "${hours} hours"
+}
+
 def onTemperatureChange(evt) {
+    def timeInCurrentStateThreshold = 15 * 60
+    def timeInCurrentState = now() - state.timeEnteredCurrentState
+    
     log.info "Current temperature is ${thermostat.currentTemperature}."
     
     def warn = false
@@ -36,13 +50,17 @@ def onTemperatureChange(evt) {
     
     if(warn) {
     	def message = 
-        	"Thermostat is ${thermostat.currentThermostatOperatingState}, " +
+        	"Thermostat has been ${thermostat.currentThermostatOperatingState} " +
+            "for ${getDisplayTime(timeInCurrentState)}, " +
             "but the temperature has changed " + 
             "from ${state.lastTemperature} " +
             "to ${thermostat.currentTemperature}."
             
-        log.warn message
-        sendPush message
+        log.info message
+        
+        if(timeInCurrentState >= timeInCurrentStateThreshold) {
+	        sendPush message
+        }
     }
     
     state.lastTemperature = thermostat.currentTemperature
@@ -51,8 +69,7 @@ def onTemperatureChange(evt) {
 
 def onOperatingStateChange(evt) {
     log.info "Operating state changed to ${thermostat.currentThermostatOperatingState}."
-    state.operatingState = thermostat.currentThermostatOperatingState
-    state.operatingStateSince = now()
+    state.timeEnteredCurrentState = now()
 }
 
 def installed() {
@@ -73,8 +90,7 @@ def initialize() {
     subscribe(thermostat, 'thermostatOperatingState', onOperatingStateChange)
 
     state.lastTemperature = thermostat.currentTemperature
-    state.operatingState = thermostat.currentThermostatOperatingState
-    state.operatingStateSince = now()
+    state.timeEnteredCurrentState = now()
     
     log.debug state
 }
