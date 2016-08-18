@@ -34,7 +34,7 @@ def getDisplayTime(seconds) {
 
 def onTemperatureChange(evt) {
     def timeInCurrentStateThreshold = 15 * 60
-    def timeInCurrentState = now() - state.timeEnteredCurrentState
+    def timeInCurrentState = (now() - state.timeEnteredCurrentState) / 1000
     
     log.info "Current temperature is ${thermostat.currentTemperature}."
     
